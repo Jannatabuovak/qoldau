@@ -1,121 +1,56 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Soul Clinic | Поддержка рядом</title>
+<script>
+/*** ❷  Настройки ***/
+const ENDPOINT   = 'https://script.google.com/macros/s/AKfycbyP6rHpJMKj1UgTL3Vb4Ps8jVWXjEHwOW6LvRDxeUW4dcLHHHXubhQ618E9ZIUciHk4/exec'; // вставьте URL веб‑аппа
+let   currentLang = 'ru';                                              // по умолчанию RU
 
-  <!-- ── Open Graph для Instagram/WhatsApp превью ── -->
-  <meta property="og:title"       content="Поддержка рядом — Soul Clinic"/>
-  <meta property="og:description" content="Анонимная психологическая помощь 24/7 на русском и казахском языках."/>
-  <meta property="og:image"       content="https://raw.githubusercontent.com/YOUR-ORG/orkenai-web/main/public/og.jpg"/>
-  <meta property="og:type"        content="website"/>
+/* ❸  Переключатель языка */
+document.querySelectorAll('[data-lang-btn]').forEach(btn => {
+  btn.onclick = () => {
+    currentLang = btn.dataset.langBtn;
+    document.querySelectorAll('[data-lang-btn]').forEach(b=>b.classList.toggle('active', b===btn));
+  };
+});
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root{--primary:#00645f;--bg:#f4f7f7;--text:#111;--r:14px}
-    *{box-sizing:border-box;font-family:Inter,Arial,sans-serif;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);line-height:1.45}
-    header{display:flex;justify-content:center;align-items:center;padding:16px;background:#fff;}
-    header img{height:32px;margin-right:10px}
-    header h1{font-size:22px;color:var(--primary)}
-    main{max-width:640px;margin:0 auto;padding:16px}
-    .lang{display:flex;justify-content:center;margin-bottom:16px}
-    .lang button{border:1px solid #bbb;background:#fff;padding:6px 16px;margin:0 4px;border-radius:var(--r);cursor:pointer}
-    .lang .active{background:var(--primary);color:#fff;border-color:var(--primary)}
-    section{background:#fff;padding:24px;border-radius:var(--r);margin-bottom:24px}
-    section h2{color:var(--primary);font-size:18px;margin-bottom:12px}
-    /* чат */
-    #chat{height:280px;border:1px solid #e1e1e1;border-radius:var(--r);padding:12px;overflow-y:auto;background:#fafbfc;margin-bottom:12px}
-    #chat p{margin-bottom:10px;white-space:pre-wrap}
-    #chat strong{color:var(--primary)}
-    #user{width:70%;padding:10px;border:1px solid #ccc;border-radius:var(--r)}
-    #send{padding:10px 18px;border:none;border-radius:var(--r);background:var(--primary);color:#fff;margin-left:6px;cursor:pointer}
-    #send:disabled{opacity:.6}
-    /* экстренный блок */
-    .alert{display:none;border:2px solid #e65100;background:#fff3e0;padding:12px;border-radius:var(--r);margin-top:12px}
-    .alert h3{margin-bottom:6px;color:#e65100}
-    .cta{display:block;margin-top:20px;text-align:center}
-    .cta a{display:inline-block;padding:12px 22px;border-radius:var(--r);background:var(--primary);color:#fff;text-decoration:none;font-weight:600}
-  </style>
-</head>
+/* ❹  Отправка сообщения */
+const chatBox   = document.querySelector('#chat-box');   // div внутри большого белого прямоуг.
+const input     = document.querySelector('#user-input');
+const sendBtn   = document.querySelector('#send-btn');
 
-<body>
-  <header>
-    <img src="https://raw.githubusercontent.com/YOUR-ORG/orkenai-web/main/public/logo.png" alt="Soul Clinic">
-    <h1>Поддержка рядом</h1>
-  </header>
+sendBtn.onclick = async () => {
+  const text = input.value.trim();
+  if (!text) return;
+  appendBubble(text, 'user');
+  input.value = ''; input.focus();
 
-  <main>
-    <!-- переключение языка -->
-    <div class="lang">
-      <button id="btn-ru" class="active">RU</button>
-      <button id="btn-kz">KZ</button>
-    </div>
+  try {
+    const r = await fetch(ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: text, lang: currentLang})
+    });
+    const data = await r.json();
+    appendBubble(data.reply, 'bot');
+  } catch(err) {
+    appendBubble('⚠️ Сервер недоступен', 'bot');
+  }
+};
 
-    <!-- чат‑ассистент -->
-    <section>
-      <h2 id="title">Напишите нам — мы рядом</h2>
-      <div id="chat"></div>
-      <input id="user" placeholder="Ваше сообщение…" />
-      <button id="send">▶</button>
+/* ❺  Помощники интерфейса */
+function appendBubble(msg, sender){
+  const bubble = document.createElement('div');
+  bubble.className = sender==='user' ? 'bubble user' : 'bubble bot';
+  bubble.textContent = msg;
+  chatBox.appendChild(bubble);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+<!-- Большое поле переписки -->
+<div id="chat-box" class="chat-log"></div>
 
-      <!-- экстренная помощь -->
-      <div id="alert" class="alert">
-        <h3>🔥 Экстренная помощь</h3>
-        <p id="alert-text">Если вы чувствуете, что можете навредить себе, позвоните 150 (национальная линия доверия) или 112.</p>
-      </div>
-    </section>
+<!-- Нижняя строка -->
+<input id="user-input" placeholder="Ваше сообщение…">
+<button id="send-btn">▶</button>
 
-    <!-- CTA на WhatsApp / телефон -->
-    <p class="cta"><a href="YOUR_WHATSAPP_LINK" target="_blank">Записаться на консультацию</a></p>
-  </main>
-
-  <script>
-    /* -------- настройки -------- */
-    const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyP6rHpJMKj1UgTL3Vb4Ps8jVWXjEHwOW6LvRDxeUW4dcLHHHXubhQ618E9ZIUciHk4/exec';   // сюда URL Apps Script
-    let lang='ru';
-
-    /* -------- элементы -------- */
-    const ruBtn=document.getElementById('btn-ru');
-    const kzBtn=document.getElementById('btn-kz');
-    const title=document.getElementById('title');
-    const chat=document.getElementById('chat');
-    const input=document.getElementById('user');
-    const send=document.getElementById('send');
-    const alertBox=document.getElementById('alert'); const alertTxt=document.getElementById('alert-text');
-
-    /* переключение языка */
-    ruBtn.onclick=()=>setLang('ru'); kzBtn.onclick=()=>setLang('kz');
-    function setLang(l){
-      lang=l;
-      ruBtn.classList.toggle('active',l==='ru'); kzBtn.classList.toggle('active',l==='kz');
-      title.textContent=l==='ru'?'Напишите нам — мы рядом':'Бізге жазыңыз — біз жанымыздамыз';
-      input.placeholder=l==='ru'?'Ваше сообщение…':'Хабарламаңыз…';
-    }
-
-    /* отправка сообщения */
-    send.onclick=async()=>{
-      const q=input.value.trim(); if(!q) return;
-      add('👤',q); input.value=''; send.disabled=true; alertBox.style.display='none';
-      try{
-        const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({msg:q,lang})});
-        const {reply,risk}=await r.json();
-        add('🤖',reply);
-        if(risk&&risk.level==='HIGH') showAlert();
-      }catch{add('🤖',lang==='ru'?'Сервис недоступен.':'Қызмет қолжетімсіз.');}
-      send.disabled=false;
-    };
-
-    function add(sender,txt){
-      chat.insertAdjacentHTML('beforeend',`<p><strong>${sender}</strong> ${txt}</p>`);
-      chat.scrollTop=chat.scrollHeight;
-    }
-    function showAlert(){
-      alertBox.style.display='block';
-      if(lang==='kz') alertTxt.textContent='Егер өзіңізге зиян келтіру ойы болса, 150 нөміріне немесе 112 нөміріне қоңырау шалыңыз.';
-    }
-  </script>
-</body>
-</html>
+<!-- Переключатели -->
+<button data-lang-btn="ru" class="active">RU</button>
+<button data-lang-btn="kz">KZ</button>
