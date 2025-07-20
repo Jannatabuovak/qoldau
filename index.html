@@ -1,36 +1,204 @@
 <!doctype html>
-<html lang="ru">
+<html>
 <head>
-<meta charset="utf-8">
-<title>Q&A c GPT</title>
-<style>
- body{font-family:Arial, sans-serif;max-width:600px;margin:40px auto}
- textarea{width:100%;padding:8px}
- #answer{white-space:pre-wrap;margin-top:1rem;background:#f7f7f7;
-         padding:1rem;border-radius:6px}
-</style>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>Chatbot</title>
 </head>
 <body>
- <h1>Спросите бота</h1>
- <textarea id="q" rows="4" placeholder="Введите вопрос…"></textarea><br>
- <button id="ask">Спросить</button>
- <div id="answer"></div>
-
+  <div class="chatbox-container" id="chatbox">
+    <div class="chatbox">
+      <div class="chatbox-header">
+        <h3>Information Search System</h3>
+        <button class="close-chatbox-btn">×</button>
+      </div>
+      <div class="chatbox-body" id="chatbox-body">
+        <div class="message received">
+          <p>Hello! How can I assist you today?</p>
+        </div>
+      </div>
+      <form class="chatbox-footer" onsubmit="sendMessage(event)">
+        <input type="text" placeholder="Type here..." id="chatbox-input" required autocomplete="off">
+        <button type="submit" id="b_send">Search</button>
+      </form>
+    </div>
+  </div>
 <script>
-const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzP_2uSH-Xd1_RQFd_qLUr48kOo6SF6SjK1YxTRGUgKuke1TW60vKkSIzZ2Fv5Aa_JE/exec';      // вставьте URL из шагa 2‑4
-
-document.getElementById('ask').onclick = async () => {
-  const question = document.getElementById('q').value.trim();
-  if(!question) return alert('Введите вопрос!');
-  document.getElementById('answer').innerText = '⏳ Думаю…';
-  const r = await fetch(ENDPOINT, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({question})
-  });
-  const data = await r.json();
-  document.getElementById('answer').innerText = data.answer || '❌ Ошибка';
-};
-</script>
+    const openaiApiKey = 'your-api-keys';
+    async function sendMessage(event) {
+      event.preventDefault();
+      document.getElementById("chatbox-input").disabled = true;
+      document.getElementById("b_send").disabled = true;
+      const messageInput = document.getElementById('chatbox-input');
+      const message = messageInput.value;
+      messageInput.value = '';
+      addMessage('sent', message);
+      const loadingMessage = addMessage('loading', 'Loading...');
+      const response = await getResponseFromOpenAI(message);
+      const elements = document.getElementsByClassName("message loading");
+      for (let i = 0; i < elements.length; i++) {
+        elements[i].style.display = "none";
+      }
+      addMessage('received', response);
+      document.getElementById("chatbox-input").disabled = false;
+      document.getElementById("b_send").disabled = false;
+      document.getElementById("chatbox-input").focus();
+      var myDiv = document.getElementById("chatbox-body");
+      myDiv.scrollTop = myDiv.scrollHeight;
+    }
+    async function getResponseFromOpenAI(message) {
+      const url = 'https://api.openai.com/v1/chat/completions';
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`,
+      };
+      const data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [{"role": "system", "content": "You are an intelligent assistant."}, {"role": "user", "content": message}]
+      };
+      const options = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data),
+      };
+      const response = await fetch(url, options);
+      const result = await response.json();
+      if (result.choices && result.choices.length > 0) {
+        return result.choices[0].message.content;
+      } 
+      return "Sorry, I couldn't understand that.";
+    }
+    function addMessage(type, message) {
+      const chatboxBody = document.getElementById('chatbox-body');
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message', type);
+      const messageText = document.createElement('p');
+      messageText.textContent = message;
+      messageElement.appendChild(messageText);
+      chatboxBody.appendChild(messageElement);
+      var myDiv = document.getElementById("chatbox-body");
+      myDiv.scrollTop = myDiv.scrollHeight;
+    }
+  </script>
+  <style>
+    /* Reset some default styles */
+    body, h1, h2, h3, p {
+      margin: 0;
+      padding: 0;
+    }
+    /* Style the chatbox container */
+    .chatbox-container {
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      width: 300px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      height: 400px;
+      overflow-y: auto;
+    }
+    /* Style the chatbox header */
+    .chatbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    /* Style the close button */
+    .close-chatbox-btn {
+      background-color: transparent;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #888;
+    }
+    /* Style the chatbox body */
+    .chatbox-body {
+      height: 300px;
+      overflow-y: auto;
+    }
+    /* Style chat messages */
+    .message {
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+      width: 100%;
+    }
+    /* Style sent messages */
+    .message.sent {
+      background-color: #4CAF50;
+      color: #fff;
+      align-self: flex-end;
+    }
+    /* Style received messages */
+    .message.received {
+      background-color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+    /* Style loading messages */
+    .message.loading {
+      background-color: #f0f0f0;
+      position: relative;
+    }
+    /* Loading animation */
+    .message.loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ccc;
+      border-top: 2px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    /* Style the chatbox footer */
+    .chatbox-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    /* Style the input field */
+    #chatbox-input {
+      flex: 1;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    /* Style the search button */
+    #b_send {
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #b_send:hover {
+      background-color: #45a049;
+    }
+    .chatbox-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chatbox-body::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 5px;
+    }
+    .chatbox-body::-webkit-scrollbar-thumb:hover {
+      background-color: #999;
+    }
+  </style>
 </body>
 </html>
