@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Қолдау / Поддержка рядом</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2d6cdf;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background: #2d6cdf;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .lang-toggle {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <h1>Қолдау / Поддержка рядом</h1>
+    <button onclick="alert('🧠 Оценка состояния скоро будет доступна')">🧠 Оценить своё состояние</button>
+    <button onclick="alert('💬 Чат с помощником скоро подключится')">💬 Поговорить с помощником</button>
+    <button onclick="alert('📞 150 — Телефон доверия')">🚨 Экстренная поддержка</button>
+    <button onclick="alert('📅 Запись пока в разработке')">📅 Записаться на консультацию</button>
+    <button onclick="alert('📚 Статьи скоро появятся')">📚 Полезные статьи</button>
+
+    <div class="lang-toggle">
+      <button onclick="switchLang()">🌐 Қазақша / Русский</button>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = "ru";
+
+    const texts = {
+      ru: {
+        title: "Қолдау / Поддержка рядом",
+        buttons: [
+          "🧠 Оценить своё состояние",
+          "💬 Поговорить с помощником",
+          "🚨 Экстренная поддержка",
+          "📅 Записаться на консультацию",
+          "📚 Полезные статьи"
+        ]
+      },
+      kz: {
+        title: "Қолдау / Поддержка рядом",
+        buttons: [
+          "🧠 Күйіңізді бағалаңыз",
+          "💬 Көмекшімен сөйлесу",
+          "🚨 Жедел қолдау",
+          "📅 Кеңеске жазылу",
+          "📚 Пайдалы мақалалар"
+        ]
+      }
+    };
+
+    function switchLang() {
+      currentLang = currentLang === "ru" ? "kz" : "ru";
+      document.querySelector("h1").textContent = texts[currentLang].title;
+      const btns = document.querySelectorAll("button");
+      btns.forEach((btn, index) => {
+        if (index < 5) btn.textContent = texts[currentLang].buttons[index];
+      });
+    }
+  </script>
+</body>
+</html>
