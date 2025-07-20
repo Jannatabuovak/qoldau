@@ -1,56 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Q&A c GPT</title>
+<style>
+ body{font-family:Arial, sans-serif;max-width:600px;margin:40px auto}
+ textarea{width:100%;padding:8px}
+ #answer{white-space:pre-wrap;margin-top:1rem;background:#f7f7f7;
+         padding:1rem;border-radius:6px}
+</style>
+</head>
+<body>
+ <h1>Спросите бота</h1>
+ <textarea id="q" rows="4" placeholder="Введите вопрос…"></textarea><br>
+ <button id="ask">Спросить</button>
+ <div id="answer"></div>
+
 <script>
-/*** ❷  Настройки ***/
-const ENDPOINT   = 'https://script.google.com/macros/s/AKfycbyP6rHpJMKj1UgTL3Vb4Ps8jVWXjEHwOW6LvRDxeUW4dcLHHHXubhQ618E9ZIUciHk4/exec'; // вставьте URL веб‑аппа
-let   currentLang = 'ru';                                              // по умолчанию RU
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbwP7fpm3Tuao7Iy35rBaym3WtUGqf-u167wOeNbvgNA8YZ1qDAMWJVmn_C41emWPLU/exec';      // вставьте URL из шагa 2‑4
 
-/* ❸  Переключатель языка */
-document.querySelectorAll('[data-lang-btn]').forEach(btn => {
-  btn.onclick = () => {
-    currentLang = btn.dataset.langBtn;
-    document.querySelectorAll('[data-lang-btn]').forEach(b=>b.classList.toggle('active', b===btn));
-  };
-});
-
-/* ❹  Отправка сообщения */
-const chatBox   = document.querySelector('#chat-box');   // div внутри большого белого прямоуг.
-const input     = document.querySelector('#user-input');
-const sendBtn   = document.querySelector('#send-btn');
-
-sendBtn.onclick = async () => {
-  const text = input.value.trim();
-  if (!text) return;
-  appendBubble(text, 'user');
-  input.value = ''; input.focus();
-
-  try {
-    const r = await fetch(ENDPOINT, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({message: text, lang: currentLang})
-    });
-    const data = await r.json();
-    appendBubble(data.reply, 'bot');
-  } catch(err) {
-    appendBubble('⚠️ Сервер недоступен', 'bot');
-  }
+document.getElementById('ask').onclick = async () => {
+  const question = document.getElementById('q').value.trim();
+  if(!question) return alert('Введите вопрос!');
+  document.getElementById('answer').innerText = '⏳ Думаю…';
+  const r = await fetch(ENDPOINT, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question})
+  });
+  const data = await r.json();
+  document.getElementById('answer').innerText = data.answer || '❌ Ошибка';
 };
-
-/* ❺  Помощники интерфейса */
-function appendBubble(msg, sender){
-  const bubble = document.createElement('div');
-  bubble.className = sender==='user' ? 'bubble user' : 'bubble bot';
-  bubble.textContent = msg;
-  chatBox.appendChild(bubble);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
 </script>
-<!-- Большое поле переписки -->
-<div id="chat-box" class="chat-log"></div>
-
-<!-- Нижняя строка -->
-<input id="user-input" placeholder="Ваше сообщение…">
-<button id="send-btn">▶</button>
-
-<!-- Переключатели -->
-<button data-lang-btn="ru" class="active">RU</button>
-<button data-lang-btn="kz">KZ</button>
+</body>
+</html>
